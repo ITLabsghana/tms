@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLeaveRecords, deleteLeaveRecord, leaveStatuses } from '../services/leaveService';
-import { getTeachers } from '../services/teacherService'; // To populate teacher filter
+import { getTeachers } from '../services/teacherService';
 import {
   Box, Button, Typography, Paper, Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, TablePagination, IconButton, CircularProgress, Alert,
@@ -18,7 +18,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { format, parseISO } from 'date-fns';
-import { debounce } from 'lodash';
+// No need for debounce here as filters trigger direct fetches
 
 const columns = [
   { id: 'teacher_name', label: 'Teacher Name (Staff ID)', minWidth: 200 },
@@ -33,7 +33,8 @@ const columns = [
 const LeaveManagementPage = () => {
   const [leaveRecords, setLeaveRecords] = useState([]);
   const [allTeachers, setAllTeachers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // General loading for the page
+  const [loadingTeachers, setLoadingTeachers] = useState(true); // Specific loading for teachers list
   const [error, setError] = useState('');
 
   const [page, setPage] = useState(0);
@@ -47,32 +48,44 @@ const LeaveManagementPage = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState(null);
 
+  // Effect to fetch all teachers once for the filter dropdown
+  useEffect(() => {
+    const fetchInitialTeachers = async () => {
+      setLoadingTeachers(true);
+      try {
+        const teachersData = await getTeachers(); // Fetches all teachers
+        setAllTeachers(teachersData.map(t => ({ ...t, full_name: `${t.first_name} ${t.surname} (${t.staff_id})` })) || []);
+      } catch (err) {
+        setError('Failed to load teachers list for filter: ' + err.message);
+      } finally {
+        setLoadingTeachers(false);
+      }
+    };
+    fetchInitialTeachers();
+  }, []); // Runs once on mount
+
+  // useCallback for fetching leave data, depends on filters
   const fetchLeaveData = useCallback(async (teacherId, status) => {
-    setLoading(true);
+    setLoading(true); // Loading for the leave records table
+    setError('');
     try {
       const params = {};
       if (teacherId) params.teacherId = teacherId;
       if (status) params.status = status;
 
-      const [records, teachersData] = await Promise.all([
-        getLeaveRecords(params),
-        selectedTeacherFilter === null ? getTeachers() : allTeachers // Fetch teachers only if filter not set or allTeachers is empty
-      ]);
-
+      const records = await getLeaveRecords(params);
       setLeaveRecords(records || []);
-      if (allTeachers.length === 0 && teachersData) { // Avoid re-setting if already populated
-          setAllTeachers(teachersData.map(t => ({ ...t, full_name: `${t.first_name} ${t.surname} (${t.staff_id})` })) || []);
-      }
-      setError('');
     } catch (err) {
       setError('Failed to fetch leave records: ' + err.message);
-      setLeaveRecords([]);
+      setLeaveRecords([]); // Clear records on error
     } finally {
       setLoading(false);
     }
-  }, [allTeachers, selectedTeacherFilter]); // Added selectedTeacherFilter to dependencies
+  }, []); // No dependencies needed here if it's only called by other effects/handlers
 
+  // Effect to fetch leave data when filters change
   useEffect(() => {
+    // Pass the actual ID for teacherId, not the whole object
     fetchLeaveData(selectedTeacherFilter?.teacher_id, selectedStatusFilter);
   }, [fetchLeaveData, selectedTeacherFilter, selectedStatusFilter]);
 
@@ -83,14 +96,14 @@ const LeaveManagementPage = () => {
   };
 
   const handleStatusFilterChange = (event, newValue) => {
-    setSelectedStatusFilter(newValue || ''); // newValue for Autocomplete can be null
+    setSelectedStatusFilter(newValue || '');
     setPage(0);
   };
 
   const clearFilters = () => {
     setSelectedTeacherFilter(null);
     setSelectedStatusFilter('');
-    // useEffect will trigger re-fetch
+    // The useEffect watching selectedTeacherFilter and selectedStatusFilter will trigger a re-fetch.
   };
 
   const handleChangePage = (event, newPage) => {
@@ -122,26 +135,32 @@ const LeaveManagementPage = () => {
 
   const handleDeleteRecord = async () => {
     if (!recordToDelete) return;
-    setLoading(true);
+    // We can set a more specific loading state if needed, e.g. `setDeleting(true)`
+    // For now, the general `setLoading(true)` in `fetchLeaveData` will cover it.
     try {
       await deleteLeaveRecord(recordToDelete.leave_id);
+      // Re-fetch data with current filters after deletion
       fetchLeaveData(selectedTeacherFilter?.teacher_id, selectedStatusFilter);
-      setError('');
+      setSuccess('Leave record deleted successfully.'); // Assuming you add a success state
     } catch (err) {
       setError('Failed to delete leave record: ' + err.message);
     } finally {
       handleCloseDeleteDialog();
-      // setLoading(false) will be called by fetchLeaveData
     }
   };
+  // Placeholder for success state if you want to show success messages
+  const [success, setSuccess] = useState('');
 
-  if (loading && !leaveRecords.length && !error) {
+
+  // Initial loading state for the whole page before any data (teachers or leave records) is attempted
+  if (loadingTeachers && allTeachers.length === 0) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
         <CircularProgress />
       </Box>
     );
   }
+
 
   return (
     <Box sx={{ p: 3 }}>
@@ -164,14 +183,14 @@ const LeaveManagementPage = () => {
           <Grid item xs={12} sm={6} md={5}>
             <Autocomplete
               options={allTeachers}
-              getOptionLabel={(option) => option.full_name || ''} // Use the pre-formatted full_name
+              getOptionLabel={(option) => option.full_name || ''}
               value={selectedTeacherFilter}
               onChange={handleTeacherFilterChange}
               isOptionEqualToValue={(option, value) => option.teacher_id === value.teacher_id}
               renderInput={(params) => (
                 <TextField {...params} label="Filter by Teacher" variant="outlined" fullWidth />
               )}
-              loading={loading && allTeachers.length === 0}
+              loading={loadingTeachers} // Use specific loading state for teacher list
               loadingText="Loading teachers..."
             />
           </Grid>
@@ -179,7 +198,7 @@ const LeaveManagementPage = () => {
             <Autocomplete
               options={leaveStatuses}
               getOptionLabel={(option) => option}
-              value={selectedStatusFilter || null} // Autocomplete expects null for no value or the value itself
+              value={selectedStatusFilter || null}
               onChange={handleStatusFilterChange}
               renderInput={(params) => (
                 <TextField {...params} label="Filter by Status" variant="outlined" fullWidth />
@@ -198,7 +217,9 @@ const LeaveManagementPage = () => {
         </Grid>
       </Paper>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>{error}</Alert>}
+      {success && <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>{success}</Alert>}
+
 
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
         <TableContainer sx={{ maxHeight: 600 }}>
@@ -217,7 +238,7 @@ const LeaveManagementPage = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {loading && (
+              {loading && ( // General loading for leave records table
                 <TableRow>
                   <TableCell colSpan={columns.length} align="center">
                     <CircularProgress sx={{my: 2}} />
@@ -300,7 +321,8 @@ const LeaveManagementPage = () => {
         <DialogActions>
           <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
           <Button onClick={handleDeleteRecord} color="error" autoFocus disabled={loading}>
-            {loading ? <CircularProgress size={24} /> : 'Delete'}
+            {/* Consider a specific deleteLoading state if general table loading is too broad during delete */}
+            {loading && recordToDelete ? <CircularProgress size={24} /> : 'Delete'}
           </Button>
         </DialogActions>
       </Dialog>
