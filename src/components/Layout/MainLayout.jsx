@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link as RouterLink, useNavigate, Outlet, useLocation } from 'react-router-dom'; // Import Outlet & useLocation
+import { Link as RouterLink, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -18,9 +18,10 @@ import ListItemText from '@mui/material/ListItemText';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import AssessmentIcon from '@mui/icons-material/Assessment'; // Icon for Reports
+import AssessmentIcon from '@mui/icons-material/Assessment';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
+import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle'; // Icon for User Management
 import { styled } from '@mui/material/styles';
 
 const drawerWidth = 240;
@@ -71,9 +72,9 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 const MainLayout = () => {
   const [open, setOpen] = useState(true);
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth(); // Get profile to check role
   const navigate = useNavigate();
-  const location = useLocation(); // Get current location
+  const location = useLocation();
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -92,16 +93,22 @@ const MainLayout = () => {
     }
   };
 
-  const menuItems = [
+  const baseMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Teachers', icon: <PeopleIcon />, path: '/teachers' },
     { text: 'Leave Management', icon: <EventNoteIcon />, path: '/leave' },
-    { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' }, // Added Reports link
+    { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
   ];
 
-  const userMenuItems = [
+  const adminMenuItems = profile?.role === 'admin' ? [
+    { text: 'User Management', icon: <SupervisedUserCircleIcon />, path: '/admin/users' },
+  ] : [];
+
+  const userMenuItems = [ // Profile link for all logged-in users
     { text: 'Profile', icon: <AccountCircleIcon />, path: '/profile' },
   ];
+
+  const allMenuItems = [...baseMenuItems, ...adminMenuItems];
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -120,7 +127,7 @@ const MainLayout = () => {
             Teacher Management System
           </Typography>
           <Typography variant="subtitle1" sx={{ mr: 2 }}>
-            {user?.email}
+            {user?.email} ({profile?.role || '...'})
           </Typography>
           <IconButton color="inherit" onClick={handleLogout} title="Logout">
             <LogoutIcon />
@@ -148,9 +155,9 @@ const MainLayout = () => {
         </DrawerHeader>
         <Divider />
         <List>
-          {menuItems.map((item) => (
+          {allMenuItems.map((item) => ( // Use allMenuItems
             <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
-              <ListItemButton selected={location.pathname.startsWith(item.path)}> {/* Use location for selected state */}
+              <ListItemButton selected={location.pathname.startsWith(item.path)}>
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>
@@ -161,7 +168,7 @@ const MainLayout = () => {
         <List>
           {userMenuItems.map((item) => (
             <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
-              <ListItemButton selected={location.pathname.startsWith(item.path)}> {/* Use location for selected state */}
+              <ListItemButton selected={location.pathname.startsWith(item.path)}>
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
               </ListItemButton>
