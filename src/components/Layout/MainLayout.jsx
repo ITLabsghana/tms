@@ -21,7 +21,7 @@ import EventNoteIcon from '@mui/icons-material/EventNote';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
-import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle'; // Icon for User Management
+import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
 import { styled } from '@mui/material/styles';
 
 const drawerWidth = 240;
@@ -72,7 +72,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 const MainLayout = () => {
   const [open, setOpen] = useState(true);
-  const { user, profile, signOut } = useAuth(); // Get profile to check role
+  const { user, profile, signOut, loading: authLoading } = useAuth(); // Get profile and authLoading
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -93,6 +93,7 @@ const MainLayout = () => {
     }
   };
 
+  // Define menu items arrays
   const baseMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Teachers', icon: <PeopleIcon />, path: '/teachers' },
@@ -100,15 +101,20 @@ const MainLayout = () => {
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
   ];
 
-  const adminMenuItems = profile?.role === 'admin' ? [
+  const adminSpecificMenuItems = [
     { text: 'User Management', icon: <SupervisedUserCircleIcon />, path: '/admin/users' },
-  ] : [];
+  ];
 
-  const userMenuItems = [ // Profile link for all logged-in users
+  const userProfileMenuItems = [
     { text: 'Profile', icon: <AccountCircleIcon />, path: '/profile' },
   ];
 
-  const allMenuItems = [...baseMenuItems, ...adminMenuItems];
+  // Combine menu items based on role
+  let displayedMenuItems = [...baseMenuItems];
+  if (!authLoading && profile?.role === 'admin') {
+    displayedMenuItems = [...baseMenuItems, ...adminSpecificMenuItems];
+  }
+
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -127,7 +133,7 @@ const MainLayout = () => {
             Teacher Management System
           </Typography>
           <Typography variant="subtitle1" sx={{ mr: 2 }}>
-            {user?.email} ({profile?.role || '...'})
+            {user?.email} {profile && `(${profile.role})`}
           </Typography>
           <IconButton color="inherit" onClick={handleLogout} title="Logout">
             <LogoutIcon />
@@ -155,7 +161,7 @@ const MainLayout = () => {
         </DrawerHeader>
         <Divider />
         <List>
-          {allMenuItems.map((item) => ( // Use allMenuItems
+          {displayedMenuItems.map((item) => (
             <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
               <ListItemButton selected={location.pathname.startsWith(item.path)}>
                 <ListItemIcon>{item.icon}</ListItemIcon>
@@ -166,7 +172,7 @@ const MainLayout = () => {
         </List>
         <Divider />
         <List>
-          {userMenuItems.map((item) => (
+          {userProfileMenuItems.map((item) => (
             <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
               <ListItemButton selected={location.pathname.startsWith(item.path)}>
                 <ListItemIcon>{item.icon}</ListItemIcon>
