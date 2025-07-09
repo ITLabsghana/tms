@@ -1,6 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://gdkfeeanhfgbcvbboepz.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdka2ZlZWFuaGZnYmN2YmJvZXB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5Mzk4ODksImV4cCI6MjA2NzUxNTg4OX0.Z9IljycYKSJIh9BKtXz1YmKmD6aqw-nnh3-ZA8nVa40';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  const errorMessage = "Supabase URL or Anon Key is missing. Make sure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your environment variables (e.g., in a .env file for local development, and in Vercel environment settings for deployment).";
+  console.error(errorMessage);
+  // You might want to throw an error or display this message prominently in the UI during development
+  // For a production build, this check helps ensure environment variables are correctly set up.
+  // Example: document.getElementById('root').innerHTML = `<div style="color: red; padding: 20px;">${errorMessage}</div>`;
+  // However, throwing an error is often better to halt execution if Supabase isn't configured.
+  throw new Error(errorMessage);
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
