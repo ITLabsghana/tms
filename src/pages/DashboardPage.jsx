@@ -9,18 +9,20 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Alert from '@mui/material/Alert';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
+import ListItemButton from '@mui/material/ListItemButton'; // Added import
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import EventBusyIcon from '@mui/icons-material/EventBusy'; // For leave ending
-import CakeIcon from '@mui/icons-material/Cake'; // For retirements (birthdays are related)
+import EventBusyIcon from '@mui/icons-material/EventBusy';
+import CakeIcon from '@mui/icons-material/Cake';
 import Divider from '@mui/material/Divider';
+import AddIcon from '@mui/icons-material/Add'; // Added import for QuickLinks
+import PeopleIcon from '@mui/icons-material/People'; // Added import for QuickLinks
+import EventNoteIcon from '@mui/icons-material/EventNote'; // Added import for QuickLinks
 import { format, parseISO } from 'date-fns';
 
-// Example data - replace with actual data fetching for summary stats if needed
 const initialSummaryStats = [
   { title: 'Total Teachers', value: 'N/A', color: 'primary.main', loading: true, key: 'totalTeachers' },
   { title: 'Active Leaves', value: 'N/A', color: 'secondary.main', loading: true, key: 'activeLeaves' },
-  // Add more stats as needed, e.g., total schools
 ];
 
 
@@ -36,7 +38,6 @@ const DashboardPage = () => {
       setLoadingNotifications(true);
       setErrorNotifications('');
       try {
-        // Fetch summary stats (example: total teachers and active leaves)
         const { count: totalTeachersCount, error: teachersError } = await supabase
             .from('teachers')
             .select('*', { count: 'exact', head: true })
@@ -45,7 +46,7 @@ const DashboardPage = () => {
         const { count: activeLeavesCount, error: leavesError } = await supabase
             .from('leave_records')
             .select('*', { count: 'exact', head: true })
-            .eq('status', 'Approved') // Or your criteria for 'active'
+            .eq('status', 'Approved')
             .lte('start_date', new Date().toISOString())
             .gte('end_date', new Date().toISOString());
 
@@ -59,12 +60,11 @@ const DashboardPage = () => {
         }));
 
 
-        // Fetch notifications
         const { data: leaveData, error: leaveError } = await supabase.rpc('get_upcoming_leave_end_dates', { days_threshold: 14 });
         if (leaveError) throw leaveError;
         setUpcomingLeaveEnds(leaveData || []);
 
-        const { data: retirementData, error: retirementError } = await supabase.rpc('get_upcoming_retirements', { days_threshold: 180 }); // e.g., within 6 months
+        const { data: retirementData, error: retirementError } = await supabase.rpc('get_upcoming_retirements', { days_threshold: 180 });
         if (retirementError) throw retirementError;
         setUpcomingRetirements(retirementData || []);
 
