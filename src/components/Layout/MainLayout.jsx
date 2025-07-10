@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link as RouterLink, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import AppBarMui from '@mui/material/AppBar';
+import AppBarMui from '@mui/material/AppBar'; // Renamed to avoid conflict with local AppBar name
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
@@ -22,25 +22,24 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
-import { styled, useTheme } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles'; // Import useTheme
 import CopyrightIcon from '@mui/icons-material/Copyright';
-import useMediaQuery from '@mui/material/useMediaQuery';
 
 const drawerWidth = 240;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
-  ({ theme, open, isMobile }) => ({
+  ({ theme, open }) => ({
     flexGrow: 1,
-    padding: 0,
+    padding: theme.spacing(0), // Remove padding from Main so content can control its own
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: isMobile ? 0 : `-${drawerWidth}px`,
+    marginLeft: `-${drawerWidth}px`,
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    ...(open && !isMobile && {
+    ...(open && {
       transition: theme.transitions.create('margin', {
         easing: theme.transitions.easing.easeOut,
         duration: theme.transitions.duration.enteringScreen,
@@ -50,14 +49,15 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   }),
 );
 
+// Using AppBarMui to avoid conflict with a potential local variable named AppBar
 const StyledAppBar = styled(AppBarMui, {
-  shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isMobile',
-})(({ theme, open, isMobile }) => ({
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  ...(open && !isMobile && {
+  ...(open && {
     width: `calc(100% - ${drawerWidth}px)`,
     marginLeft: `${drawerWidth}px`,
     transition: theme.transitions.create(['margin', 'width'], {
@@ -77,43 +77,33 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 const ContentBox = styled(Box)(({ theme }) => ({
     flexGrow: 1,
-    padding: theme.spacing(3),
-    width: '100%',
-    boxSizing: 'border-box',
+    padding: theme.spacing(3), // Add padding here for the content area
+    // overflowY: 'auto', // If content might overflow
   }));
 
 const Footer = styled(Box)(({ theme }) => ({
-    padding: theme.spacing(1.5),
+    padding: theme.spacing(1.5), // Reduced padding a bit
     marginTop: 'auto',
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
+    backgroundColor: theme.palette.primary.main, // Use theme's primary color like AppBar
+    color: theme.palette.primary.contrastText, // Ensure text is readable
     textAlign: 'center',
+    // borderTop: `1px solid ${theme.palette.divider}`, // Optional: if you want a divider
   }));
 
 const MainLayout = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopOpen, setDesktopOpen] = useState(true);
-
+  const [open, setOpen] = useState(true);
   const { user, profile, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme(); // Get theme for footer color
 
-  const handleDrawerToggle = () => {
-    if (isMobile) {
-      setMobileOpen(!mobileOpen);
-    } else {
-      setDesktopOpen(!desktopOpen);
-    }
+  const handleDrawerOpen = () => {
+    setOpen(true);
   };
 
-  const handleMenuItemClick = () => {
-    if (isMobile) {
-      setMobileOpen(false);
-    }
+  const handleDrawerClose = () => {
+    setOpen(false);
   };
-
 
   const handleLogout = async () => {
     try {
@@ -131,32 +121,30 @@ const MainLayout = () => {
     { text: 'Reports', icon: <AssessmentIcon />, path: '/reports' },
   ];
 
-  // Admin-specific menu items are added if the user is an admin
-  const adminSpecificMenuItems = [];
-  if (!authLoading && profile?.role === 'admin') {
-    adminSpecificMenuItems.push({ text: 'User Management', icon: <SupervisedUserCircleIcon />, path: '/admin/users' });
-  }
+  const adminSpecificMenuItems = [
+    { text: 'User Management', icon: <SupervisedUserCircleIcon />, path: '/admin/users' },
+  ];
 
   const userProfileMenuItems = [
     { text: 'Profile', icon: <AccountCircleIcon />, path: '/profile' },
   ];
 
-  const displayedMenuItems = [...baseMenuItems, ...adminSpecificMenuItems];
-
-
-  const currentDrawerOpen = isMobile ? mobileOpen : desktopOpen;
+  let displayedMenuItems = [...baseMenuItems];
+  if (!authLoading && profile?.role === 'admin') {
+    displayedMenuItems = [...baseMenuItems, ...adminSpecificMenuItems];
+  }
 
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <StyledAppBar position="fixed" open={currentDrawerOpen} isMobile={isMobile}>
+      <StyledAppBar position="fixed" open={open}>
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
-            onClick={handleDrawerToggle}
+            onClick={handleDrawerOpen}
             edge="start"
-            sx={{ mr: 2, ...(currentDrawerOpen && !isMobile && { display: 'none' }) }}
+            sx={{ mr: 2, ...(open && { display: 'none' }) }}
           >
             <MenuIcon />
           </IconButton>
@@ -172,13 +160,6 @@ const MainLayout = () => {
         </Toolbar>
       </StyledAppBar>
       <Drawer
-        variant={isMobile ? "temporary" : "persistent"}
-        anchor="left"
-        open={currentDrawerOpen}
-        onClose={isMobile ? handleDrawerToggle : undefined}
-        ModalProps={{
-            keepMounted: true,
-        }}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
@@ -187,46 +168,46 @@ const MainLayout = () => {
             boxSizing: 'border-box',
           },
         }}
+        variant="persistent"
+        anchor="left"
+        open={open}
       >
-        {/* Drawer Content */}
-        <div>
-          <DrawerHeader>
-            <Typography variant="h6" sx={{ mr: 'auto', ml: 1 }}>Menu</Typography>
-            <IconButton onClick={handleDrawerToggle}>
-              <ChevronLeftIcon />
-            </IconButton>
-          </DrawerHeader>
-          <Divider />
-          <List>
-            {displayedMenuItems.map((item) => (
-              <ListItem key={item.text} disablePadding component={RouterLink} to={item.path} onClick={handleMenuItemClick}>
-                <ListItemButton selected={location.pathname.startsWith(item.path)}>
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-          <Divider />
-          <List>
-            {userProfileMenuItems.map((item) => (
-              <ListItem key={item.text} disablePadding component={RouterLink} to={item.path} onClick={handleMenuItemClick}>
-                <ListItemButton selected={location.pathname.startsWith(item.path)}>
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        </div>
+        <DrawerHeader>
+          <Typography variant="h6" sx={{ mr: 'auto', ml: 1}}>Menu</Typography>
+          <IconButton onClick={handleDrawerClose}>
+            <ChevronLeftIcon />
+          </IconButton>
+        </DrawerHeader>
+        <Divider />
+        <List>
+          {displayedMenuItems.map((item) => (
+            <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
+              <ListItemButton selected={location.pathname.startsWith(item.path)}>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+        <Divider />
+        <List>
+          {userProfileMenuItems.map((item) => (
+            <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
+              <ListItemButton selected={location.pathname.startsWith(item.path)}>
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
       </Drawer>
-      <Main open={currentDrawerOpen} isMobile={isMobile}>
+      <Main open={open}>
         <DrawerHeader />
-        <ContentBox>
+        <ContentBox> {/* Content wrapper with padding */}
           <Outlet />
         </ContentBox>
         <Footer>
-            <Typography variant="body2">
+            <Typography variant="body2"> {/* Removed color="text.secondary" to use contrastText */}
                 Created By ITLabs Ghana <CopyrightIcon sx={{fontSize: 'inherit', verticalAlign: 'middle'}}/> 2025. Contact: 0248362847
             </Typography>
         </Footer>

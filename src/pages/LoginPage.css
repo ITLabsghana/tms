@@ -1,0 +1,172 @@
+/* Styles for LoginPage.jsx - background, footer, and form centering */
+
+/* Full page container for LoginPage */
+.login-page-container-new {
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden; /* Prevents scrollbars if content overflows slightly */
+    position: relative; /* For positioning footer and background */
+    display: flex; /* To help center the login form wrapper */
+    justify-content: center;
+    align-items: center;
+}
+
+.background-container-new {
+    position: fixed; /* Fixed to cover the whole viewport */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Ensure it's behind all content */
+}
+
+.top-pattern-new {
+    height: 100%; /* Full height of its parent (.background-container-new) */
+    /* New full-page vertical gradient */
+    background: linear-gradient(to bottom,
+        #64b5f6 0%,  /* Lighter blue at the top */
+        #1976d2 50%, /* Primary blue around the middle */
+        #001f3f 100% /* Dark navy/blue at the bottom */
+    );
+    position: relative;
+    /* Mask properties removed */
+}
+
+/* Geometric shapes styling - colors updated to primary/accent palette */
+.geo-shape-new {
+    position: absolute;
+    opacity: 0.3;
+    border-radius: 8px;
+}
+
+/* Primary: #1976d2, Secondary: #dc004e (Pink/Red), Accent suggestion: Teal/Cyan like #00bcd4 or #4dd0e1 */
+.geo-shape-new.s1-new {
+    width: 18%; height: 25%;
+    background: #4dd0e1; /* Light Teal/Cyan Accent */
+    top: 10%; left: 8%;
+    transform: rotate(15deg);
+    clip-path: polygon(0% 15%, 15% 0%, 100% 50%, 85% 100%, 0% 85%);
+}
+.geo-shape-new.s2-new {
+    width: 15%; height: 20%;
+    background: #1976d2; /* Primary Blue */
+    top: 50%; left: 25%;
+    transform: rotate(-10deg) skew(10deg);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+.geo-shape-new.s3-new {
+    width: 12%; height: 18%;
+    background: #64b5f6; /* Lighter shade of Primary Blue */
+    top: 20%; right: 12%;
+    transform: rotate(30deg);
+    border-radius: 20% 40% 30% 50%;
+}
+.geo-shape-new.s4-new {
+    width: 20%; height: 10%;
+    background: #dc004e; /* Secondary Pink/Red as a playful accent */
+    opacity: 0.25;
+    bottom: 10%; left: 40%;
+    transform: rotate(-5deg);
+    border-radius: 50px;
+}
+.geo-shape-new.s5-new {
+    width: 16%; height: 22%;
+    background: #004ba0; /* Darker shade of Primary Blue */
+    bottom: 15%; right: 5%;
+    transform: rotate(-20deg);
+    clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
+/* New shapes for denser geometry */
+.geo-shape-new.s6-new {
+    width: 10%; height: 15%;
+    background: #4dd0e1; /* Light Teal/Cyan Accent */
+    opacity: 0.35;
+    top: 30%; left: 60%;
+    transform: rotate(50deg) skew(-15deg);
+    border-radius: 50% 20% / 10% 40%;
+}
+
+.geo-shape-new.s7-new {
+    width: 14%; height: 18%;
+    background: #64b5f6; /* Lighter Primary Blue */
+    opacity: 0.25;
+    bottom: 5%; left: 15%;
+    transform: rotate(-30deg);
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+
+.geo-shape-new.s8-new {
+    width: 22%; height: 8%;
+    background: #dc004e; /* Secondary Pink/Red */
+    opacity: 0.2;
+    top: 65%; right: 20%;
+    transform: rotate(10deg);
+    border-radius: 10px 50px 10px 50px;
+}
+
+/* Wrapper to center the LoginForm component */
+.login-form-wrapper-new {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1; /* Ensure form is above background */
+}
+
+.page-footer-new {
+    position: fixed;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 0;
+}
+
+.page-footer-new p {
+    font-size: 0.85em;
+    color: #f0f0f0;
+    margin: 0;
+    padding: 5px;
+    display: inline-block;
+    border-radius: 5px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Responsive adjustments for background shapes and footer if needed */
+@media (max-width: 768px) {
+    .geo-shape-new.s1-new { width: 22%; height: 30%; }
+    .geo-shape-new.s2-new { width: 20%; height: 25%; }
+    .geo-shape-new.s3-new { width: 18%; height: 22%; }
+    .geo-shape-new.s4-new { width: 25%; height: 12%; }
+    .geo-shape-new.s5-new { width: 20%; height: 28%; }
+    /* Responsive adjustments for new shapes if needed */
+    .geo-shape-new.s6-new { width: 15%; height: 20%; }
+    .geo-shape-new.s7-new { width: 18%; height: 22%; }
+    .geo-shape-new.s8-new { width: 28%; height: 10%; }
+}
+
+/* Adjustments for very short screens where fixed footer might be an issue */
+@media (max-height: 600px) {
+    .login-page-container-new {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        padding-top: 20px;
+        padding-bottom: 60px;
+    }
+    .login-form-wrapper-new {
+       margin-bottom: 20px;
+    }
+    .page-footer-new {
+        position: relative;
+        bottom: auto;
+        margin-top: 20px;
+        padding-bottom: 10px;
+    }
+    .page-footer-new p {
+        color: #301934;
+    }
+}
