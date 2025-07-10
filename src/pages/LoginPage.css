@@ -24,19 +24,15 @@
 }
 
 .top-pattern-new {
-    height: 65%; /* Increased height */
-    /* Updated gradient using primary color #1976d2 and complementary blues/teals */
-    background: linear-gradient(135deg, #64b5f6, #1976d2, #004ba0); /* Lighter blue, primary blue, darker blue */
+    height: 100%; /* Full height of its parent (.background-container-new) */
+    /* New full-page vertical gradient */
+    background: linear-gradient(to bottom,
+        #64b5f6 0%,  /* Lighter blue at the top */
+        #1976d2 50%, /* Primary blue around the middle */
+        #001f3f 100% /* Dark navy/blue at the bottom */
+    );
     position: relative;
-    /* overflow: hidden; */ /* Masking might conflict with overflow:hidden, or make it redundant depending on mask behavior */
-    -webkit-mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
-    mask-image: linear-gradient(to bottom, black 75%, transparent 100%);
-}
-
-.bottom-solid-new { /* Renaming to bottom-gradient-new might be more accurate now */
-    height: 35%; /* Decreased height */
-    /* Subtle dark gradient complementing the primary blue */
-    background: linear-gradient(to bottom, #0d274d, #001f3f); /* Dark navy to deeper navy/almost black */
+    /* Remove mask properties */
 }
 
 /* Geometric shapes styling - colors updated to primary/accent palette */

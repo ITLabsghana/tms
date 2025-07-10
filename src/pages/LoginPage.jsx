@@ -17,7 +17,7 @@ const LoginPage = () => {
           <div className="geo-shape-new s7-new"></div> {/* New shape */}
           <div className="geo-shape-new s8-new"></div> {/* New shape */}
         </div>
-        <div className="bottom-solid-new"></div>
+        {/* <div className="bottom-solid-new"></div> Removed this element */}
       </div>
 
       <div className="login-form-wrapper-new"> {/* Centering the login form */}
