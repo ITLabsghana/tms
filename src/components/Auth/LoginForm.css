@@ -24,7 +24,7 @@
 .icon-shape-new {
     width: 70px;
     height: 70px;
-    background-color: #9933ff; /* Bright purple/pink */
+    background-color: #1976d2; /* Primary Color */
     border-radius: 15px; /* Rounded square */
     display: flex;
     flex-direction: column;
@@ -75,7 +75,7 @@
 
 .main-title-new {
     font-size: 1.5em;
-    color: #007bff; /* Medium blue */
+    color: #1976d2; /* Primary Color */
     margin-bottom: 25px;
     font-weight: 600;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Explicitly set font */
@@ -118,14 +118,14 @@
 
 .input-group-new input:focus {
     outline: none;
-    border-color: #80bdff; /* Highlight on focus */
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: #1976d2; /* Primary Color for focus */
+    box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.25); /* Primary Color with alpha for focus shadow */
 }
 
 .login-button-new {
     width: 100%;
     padding: 12px 15px;
-    background-color: #17a2b8; /* Medium blue/teal */
+    background-color: #1976d2; /* Primary Color */
     color: white;
     border: none;
     border-radius: 10px; /* Rounded corners */
@@ -139,7 +139,7 @@
 }
 
 .login-button-new:hover {
-    background-color: #138496; /* Darker shade on hover */
+    background-color: #115293; /* Darker shade of Primary Color for hover */
 }
 
 .login-button-new:disabled {

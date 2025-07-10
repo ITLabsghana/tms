@@ -13,6 +13,9 @@ const LoginPage = () => {
           <div className="geo-shape-new s3-new"></div>
           <div className="geo-shape-new s4-new"></div>
           <div className="geo-shape-new s5-new"></div>
+          <div className="geo-shape-new s6-new"></div> {/* New shape */}
+          <div className="geo-shape-new s7-new"></div> {/* New shape */}
+          <div className="geo-shape-new s8-new"></div> {/* New shape */}
         </div>
         <div className="bottom-solid-new"></div>
       </div>
@@ -22,7 +25,7 @@ const LoginPage = () => {
       </div>
 
       <footer className="page-footer-new">
-        <p>Design and Created by ITLabs Ghana. Contact 0248362847</p>
+        <p>Designed and Created by ITLabs Ghana. Contact 0248362847</p>
       </footer>
     </div>
   );

@@ -25,58 +25,89 @@
 
 .top-pattern-new {
     height: 45%; /* Roughly 40-50% */
-    /* A base gradient as fallback or part of the design */
-    background: linear-gradient(135deg, #ff00cc, #9933ff, #33ccff);
+    /* Updated gradient using primary color #1976d2 and complementary blues/teals */
+    background: linear-gradient(135deg, #64b5f6, #1976d2, #004ba0); /* Lighter blue, primary blue, darker blue */
     position: relative;
     overflow: hidden; /* To contain geometric shapes */
 }
 
-.bottom-solid-new {
+.bottom-solid-new { /* Renaming to bottom-gradient-new might be more accurate now */
     height: 55%;
-    background-color: #480048; /* Deep purple / Indigo */
+    /* Subtle dark gradient complementing the primary blue */
+    background: linear-gradient(to bottom, #0d274d, #001f3f); /* Dark navy to deeper navy/almost black */
 }
 
-/* Geometric shapes styling (adapted from new_style.css) */
+/* Geometric shapes styling - colors updated to primary/accent palette */
 .geo-shape-new {
     position: absolute;
-    opacity: 0.25;
+    opacity: 0.3; /* Slightly increased opacity for better visibility with new palette */
     border-radius: 8px;
 }
 
+/* Primary: #1976d2, Secondary: #dc004e (Pink/Red), Accent suggestion: Teal/Cyan like #00bcd4 or #4dd0e1 */
 .geo-shape-new.s1-new {
     width: 18%; height: 25%;
-    background: #ff00cc; /* Pink */
+    background: #4dd0e1; /* Light Teal/Cyan Accent */
     top: 10%; left: 8%;
     transform: rotate(15deg);
     clip-path: polygon(0% 15%, 15% 0%, 100% 50%, 85% 100%, 0% 85%);
 }
 .geo-shape-new.s2-new {
     width: 15%; height: 20%;
-    background: #9933ff; /* Purple */
+    background: #1976d2; /* Primary Blue */
     top: 50%; left: 25%;
     transform: rotate(-10deg) skew(10deg);
     clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
 }
 .geo-shape-new.s3-new {
     width: 12%; height: 18%;
-    background: #33ccff; /* Blue */
+    background: #64b5f6; /* Lighter shade of Primary Blue */
     top: 20%; right: 12%;
     transform: rotate(30deg);
     border-radius: 20% 40% 30% 50%;
 }
 .geo-shape-new.s4-new {
     width: 20%; height: 10%;
-    background: #ff69b4; /* Light Pink */
+    background: #dc004e; /* Secondary Pink/Red as a playful accent */
+    opacity: 0.25; /* Secondary might be strong, tone down opacity slightly */
     bottom: 10%; left: 40%;
     transform: rotate(-5deg);
     border-radius: 50px;
 }
 .geo-shape-new.s5-new {
     width: 16%; height: 22%;
-    background: #8A2BE2; /* BlueViolet */
+    background: #004ba0; /* Darker shade of Primary Blue */
     bottom: 15%; right: 5%;
     transform: rotate(-20deg);
     clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+}
+
+/* New shapes for denser geometry */
+.geo-shape-new.s6-new { /* Smaller, different accent color, different position */
+    width: 10%; height: 15%;
+    background: #4dd0e1; /* Light Teal/Cyan Accent */
+    opacity: 0.35;
+    top: 30%; left: 60%;
+    transform: rotate(50deg) skew(-15deg);
+    border-radius: 50% 20% / 10% 40%; /* Irregular rounded shape */
+}
+
+.geo-shape-new.s7-new { /* Medium size, primary color variant, overlapping */
+    width: 14%; height: 18%;
+    background: #64b5f6; /* Lighter Primary Blue */
+    opacity: 0.25;
+    bottom: 5%; left: 15%; /* Near existing s4, but different layer potentially */
+    transform: rotate(-30deg);
+    clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); /* Hexagon-like */
+}
+
+.geo-shape-new.s8-new { /* Different aspect ratio, secondary color as accent */
+    width: 22%; height: 8%;
+    background: #dc004e; /* Secondary Pink/Red */
+    opacity: 0.2; /* Keep secondary accents more subtle if strong */
+    top: 65%; right: 20%; /* Placed to fill some space in the top-right area */
+    transform: rotate(10deg);
+    border-radius: 10px 50px 10px 50px; /* Pill-like shape */
 }
 
 /* Wrapper to center the LoginForm component */
