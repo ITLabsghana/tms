@@ -23,6 +23,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
 import { styled } from '@mui/material/styles';
+import CopyrightIcon from '@mui/icons-material/Copyright'; // For copyright symbol
 
 const drawerWidth = 240;
 
@@ -35,6 +36,9 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
       duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: `-${drawerWidth}px`,
+    minHeight: '100vh', // Ensure main content area takes full height
+    display: 'flex',
+    flexDirection: 'column', // To allow footer to push to bottom
     ...(open && {
       transition: theme.transitions.create('margin', {
         easing: theme.transitions.easing.easeOut,
@@ -70,9 +74,17 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
+const Footer = styled(Box)(({ theme }) => ({
+    padding: theme.spacing(2),
+    marginTop: 'auto', // Push footer to the bottom
+    backgroundColor: theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[800],
+    textAlign: 'center',
+    borderTop: `1px solid ${theme.palette.divider}`,
+  }));
+
 const MainLayout = () => {
   const [open, setOpen] = useState(true);
-  const { user, profile, signOut, loading: authLoading } = useAuth(); // Get profile and authLoading
+  const { user, profile, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -93,7 +105,6 @@ const MainLayout = () => {
     }
   };
 
-  // Define menu items arrays
   const baseMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'Teachers', icon: <PeopleIcon />, path: '/teachers' },
@@ -109,7 +120,6 @@ const MainLayout = () => {
     { text: 'Profile', icon: <AccountCircleIcon />, path: '/profile' },
   ];
 
-  // Combine menu items based on role
   let displayedMenuItems = [...baseMenuItems];
   if (!authLoading && profile?.role === 'admin') {
     displayedMenuItems = [...baseMenuItems, ...adminSpecificMenuItems];
@@ -184,7 +194,14 @@ const MainLayout = () => {
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
-        <Outlet />
+        <Box component="div" sx={{ flexGrow: 1 }}> {/* Content wrapper */}
+          <Outlet />
+        </Box>
+        <Footer>
+            <Typography variant="body2" color="text.secondary">
+                Created By ITLabs Ghana <CopyrightIcon sx={{fontSize: 'inherit', verticalAlign: 'middle'}}/> 2025. Contact: 0248362847
+            </Typography>
+        </Footer>
       </Main>
     </Box>
   );
