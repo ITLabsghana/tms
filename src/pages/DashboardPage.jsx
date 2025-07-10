@@ -19,6 +19,11 @@ import AddIcon from '@mui/icons-material/Add'; // Added import for QuickLinks
 import PeopleIcon from '@mui/icons-material/People'; // Added import for QuickLinks
 import EventNoteIcon from '@mui/icons-material/EventNote'; // Added import for QuickLinks
 import { format, parseISO } from 'date-fns';
+import IconButton from '@mui/material/IconButton'; // Added for theme toggle
+import Brightness4Icon from '@mui/icons-material/Brightness4'; // For dark mode
+import Brightness7Icon from '@mui/icons-material/Brightness7'; // For light mode
+import { useThemeContext } from '../contexts/ThemeContext'; // Import useThemeContext
+
 
 const initialSummaryStats = [
   { title: 'Total Teachers', value: 'N/A', color: 'primary.main', loading: true, key: 'totalTeachers' },
@@ -32,6 +37,7 @@ const DashboardPage = () => {
   const [upcomingRetirements, setUpcomingRetirements] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(true);
   const [errorNotifications, setErrorNotifications] = useState('');
+  const { mode: themeMode, toggleTheme } = useThemeContext(); // Get theme mode and toggle function
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -81,9 +87,14 @@ const DashboardPage = () => {
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Typography variant="h4" gutterBottom component="h1">
-        District Supervisor Dashboard
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h4" component="h1">
+          District Supervisor Dashboard
+        </Typography>
+        <IconButton sx={{ ml: 1 }} onClick={toggleTheme} color="inherit" title={themeMode === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}>
+            {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+        </IconButton>
+      </Box>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {summaryStats.map((stat) => (

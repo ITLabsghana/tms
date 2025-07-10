@@ -1,33 +1,40 @@
 import React from 'react';
 import LoginForm from '../components/Auth/LoginForm';
-import './LoginPage.css'; // For background, footer, and overall page styles
+import Container from '@mui/material/Container';
+import Box from '@mui/material/Box';
+// import { Link as RouterLink } from 'react-router-dom'; // No longer needed for Sign Up
+// import Link from '@mui/material/Link'; // No longer needed for Sign Up
+import Typography from '@mui/material/Typography'; // Still used for title potentially
 
 const LoginPage = () => {
   return (
-    <div className="login-page-container-new"> {/* Main full-page container */}
-      <div className="background-container-new">
-        <div className="top-pattern-new"> {/* This will be 100% height with a full gradient */}
-          {/* Geometric shapes */}
-          <div className="geo-shape-new s1-new"></div>
-          <div className="geo-shape-new s2-new"></div>
-          <div className="geo-shape-new s3-new"></div>
-          <div className="geo-shape-new s4-new"></div>
-          <div className="geo-shape-new s5-new"></div>
-          <div className="geo-shape-new s6-new"></div>
-          <div className="geo-shape-new s7-new"></div>
-          <div className="geo-shape-new s8-new"></div>
-        </div>
-        {/* No .bottom-solid-new element here */}
-      </div>
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        {/* Optional: Add a logo here */}
+        {/* <img src="/path-to-your-logo.png" alt="Logo" style={{ marginBottom: '20px', width: '100px' }} /> */}
 
-      <div className="login-form-wrapper-new"> {/* Centering the login form */}
+        {/* The LoginForm component itself will have a "Login" title */}
         <LoginForm />
-      </div>
 
-      <footer className="page-footer-new">
-        <p>Designed and Created by ITLabs Ghana. Contact 0248362847</p>
-      </footer>
-    </div>
+        {/* Removed "Don't have an account? Sign Up" link */}
+
+        {/* Optional: Link to password reset page can still be here if desired */}
+        {/*
+        <Typography variant="body2" sx={{ mt: 3 }}>
+          <Link component={RouterLink} to="/forgot-password">
+            Forgot password?
+          </Link>
+        </Typography>
+        */}
+      </Box>
+    </Container>
   );
 };
 
