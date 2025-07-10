@@ -108,7 +108,7 @@ const MainLayout = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/login');
+      // navigate('/login'); // Removed: ProtectedRoute will handle redirection
     } catch (error) {
       console.error('Failed to log out:', error);
     }
