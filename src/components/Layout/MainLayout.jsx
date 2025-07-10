@@ -3,7 +3,7 @@ import { Link as RouterLink, useNavigate, Outlet, useLocation } from 'react-rout
 import { useAuth } from '../../contexts/AuthContext';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import AppBar from '@mui/material/AppBar';
+import AppBarMui from '@mui/material/AppBar'; // Renamed to avoid conflict with local AppBar name
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
@@ -22,23 +22,23 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
-import { styled } from '@mui/material/styles';
-import CopyrightIcon from '@mui/icons-material/Copyright'; // For copyright symbol
+import { styled, useTheme } from '@mui/material/styles'; // Import useTheme
+import CopyrightIcon from '@mui/icons-material/Copyright';
 
 const drawerWidth = 240;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   ({ theme, open }) => ({
     flexGrow: 1,
-    padding: theme.spacing(3),
+    padding: theme.spacing(0), // Remove padding from Main so content can control its own
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
     marginLeft: `-${drawerWidth}px`,
-    minHeight: '100vh', // Ensure main content area takes full height
+    minHeight: '100vh',
     display: 'flex',
-    flexDirection: 'column', // To allow footer to push to bottom
+    flexDirection: 'column',
     ...(open && {
       transition: theme.transitions.create('margin', {
         easing: theme.transitions.easing.easeOut,
@@ -49,7 +49,8 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   }),
 );
 
-const StyledAppBar = styled(AppBar, {
+// Using AppBarMui to avoid conflict with a potential local variable named AppBar
+const StyledAppBar = styled(AppBarMui, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
   transition: theme.transitions.create(['margin', 'width'], {
@@ -74,12 +75,19 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
+const ContentBox = styled(Box)(({ theme }) => ({
+    flexGrow: 1,
+    padding: theme.spacing(3), // Add padding here for the content area
+    // overflowY: 'auto', // If content might overflow
+  }));
+
 const Footer = styled(Box)(({ theme }) => ({
-    padding: theme.spacing(2),
-    marginTop: 'auto', // Push footer to the bottom
-    backgroundColor: theme.palette.mode === 'light' ? theme.palette.grey[200] : theme.palette.grey[800],
+    padding: theme.spacing(1.5), // Reduced padding a bit
+    marginTop: 'auto',
+    backgroundColor: theme.palette.primary.main, // Use theme's primary color like AppBar
+    color: theme.palette.primary.contrastText, // Ensure text is readable
     textAlign: 'center',
-    borderTop: `1px solid ${theme.palette.divider}`,
+    // borderTop: `1px solid ${theme.palette.divider}`, // Optional: if you want a divider
   }));
 
 const MainLayout = () => {
@@ -87,6 +95,7 @@ const MainLayout = () => {
   const { user, profile, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme(); // Get theme for footer color
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -194,11 +203,11 @@ const MainLayout = () => {
       </Drawer>
       <Main open={open}>
         <DrawerHeader />
-        <Box component="div" sx={{ flexGrow: 1 }}> {/* Content wrapper */}
+        <ContentBox> {/* Content wrapper with padding */}
           <Outlet />
-        </Box>
+        </ContentBox>
         <Footer>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2"> {/* Removed color="text.secondary" to use contrastText */}
                 Created By ITLabs Ghana <CopyrightIcon sx={{fontSize: 'inherit', verticalAlign: 'middle'}}/> 2025. Contact: 0248362847
             </Typography>
         </Footer>
