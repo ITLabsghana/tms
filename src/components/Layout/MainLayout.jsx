@@ -152,11 +152,8 @@ const MainLayout = () => {
             Teacher Management System
           </Typography>
           <Typography variant="subtitle1" sx={{ mr: 2 }}>
-            {user?.email} {profile && `(${profile.role})`}
+            {profile?.display_name || user?.email} {profile && `(${profile.role})`}
           </Typography>
-          <IconButton color="inherit" onClick={handleLogout} title="Logout">
-            <LogoutIcon />
-          </IconButton>
         </Toolbar>
       </StyledAppBar>
       <Drawer
@@ -199,6 +196,15 @@ const MainLayout = () => {
               </ListItemButton>
             </ListItem>
           ))}
+        </List>
+        <Divider />
+        <List>
+          <ListItem disablePadding onClick={handleLogout}>
+            <ListItemButton>
+              <ListItemIcon><LogoutIcon /></ListItemIcon>
+              <ListItemText primary="Logout" />
+            </ListItemButton>
+          </ListItem>
         </List>
       </Drawer>
       <Main open={open}>
