@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { Link as RouterLink, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
-import AppBarMui from '@mui/material/AppBar'; // Renamed to avoid conflict with local AppBar name
+import AppBarMui from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
 import Typography from '@mui/material/Typography';
@@ -22,24 +22,25 @@ import AssessmentIcon from '@mui/icons-material/Assessment';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import SupervisedUserCircleIcon from '@mui/icons-material/SupervisedUserCircle';
-import { styled, useTheme } from '@mui/material/styles'; // Import useTheme
+import { styled, useTheme } from '@mui/material/styles';
 import CopyrightIcon from '@mui/icons-material/Copyright';
+import useMediaQuery from '@mui/material/useMediaQuery'; // For responsive drawer
 
 const drawerWidth = 240;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
-  ({ theme, open }) => ({
+  ({ theme, open, isMobile }) => ({ // Added isMobile prop
     flexGrow: 1,
-    padding: theme.spacing(0), // Remove padding from Main so content can control its own
+    padding: 0,
     transition: theme.transitions.create('margin', {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: `-${drawerWidth}px`,
+    marginLeft: isMobile ? 0 : `-${drawerWidth}px`, // No margin shift for mobile if drawer is temporary
     minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
-    ...(open && {
+    ...(open && !isMobile && { // Only apply margin shift if drawer is persistent (not mobile)
       transition: theme.transitions.create('margin', {
         easing: theme.transitions.easing.easeOut,
         duration: theme.transitions.duration.enteringScreen,
@@ -49,15 +50,14 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(
   }),
 );
 
-// Using AppBarMui to avoid conflict with a potential local variable named AppBar
 const StyledAppBar = styled(AppBarMui, {
-  shouldForwardProp: (prop) => prop !== 'open',
-})(({ theme, open }) => ({
+  shouldForwardProp: (prop) => prop !== 'open' && prop !== 'isMobile', // Add isMobile
+})(({ theme, open, isMobile }) => ({ // Added isMobile prop
   transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  ...(open && {
+  ...(open && !isMobile && { // Only adjust width if drawer is persistent
     width: `calc(100% - ${drawerWidth}px)`,
     marginLeft: `${drawerWidth}px`,
     transition: theme.transitions.create(['margin', 'width'], {
@@ -77,33 +77,44 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 const ContentBox = styled(Box)(({ theme }) => ({
     flexGrow: 1,
-    padding: theme.spacing(3), // Add padding here for the content area
-    // overflowY: 'auto', // If content might overflow
+    padding: theme.spacing(3),
+    width: '100%', // Ensure ContentBox tries to take full width
+    boxSizing: 'border-box', // Include padding and border in the element's total width and height
   }));
 
 const Footer = styled(Box)(({ theme }) => ({
-    padding: theme.spacing(1.5), // Reduced padding a bit
+    padding: theme.spacing(1.5),
     marginTop: 'auto',
-    backgroundColor: theme.palette.primary.main, // Use theme's primary color like AppBar
-    color: theme.palette.primary.contrastText, // Ensure text is readable
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
     textAlign: 'center',
-    // borderTop: `1px solid ${theme.palette.divider}`, // Optional: if you want a divider
   }));
 
 const MainLayout = () => {
-  const [open, setOpen] = useState(true);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md')); // Use 'md' breakpoint for tablets and below
+  const [mobileOpen, setMobileOpen] = useState(false); // For temporary drawer on mobile
+  const [desktopOpen, setDesktopOpen] = useState(true); // For persistent drawer on desktop
+
   const { user, profile, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const theme = useTheme(); // Get theme for footer color
 
-  const handleDrawerOpen = () => {
-    setOpen(true);
+  const handleDrawerToggle = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setDesktopOpen(!desktopOpen);
+    }
   };
 
-  const handleDrawerClose = () => {
-    setOpen(false);
+  // Close mobile drawer when a menu item is clicked
+  const handleMenuItemClick = () => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
   };
+
 
   const handleLogout = async () => {
     try {
@@ -134,17 +145,53 @@ const MainLayout = () => {
     displayedMenuItems = [...baseMenuItems, ...adminSpecificMenuItems];
   }
 
+  const drawerContent = (
+    <div>
+      <DrawerHeader>
+        <Typography variant="h6" sx={{ mr: 'auto', ml: 1 }}>Menu</Typography>
+        <IconButton onClick={handleDrawerToggle}> {/* Use handleDrawerToggle for desktop too */}
+          <ChevronLeftIcon />
+        </IconButton>
+      </DrawerHeader>
+      <Divider />
+      <List>
+        {displayedMenuItems.map((item) => (
+          <ListItem key={item.text} disablePadding component={RouterLink} to={item.path} onClick={handleMenuItemClick}>
+            <ListItemButton selected={location.pathname.startsWith(item.path)}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <List>
+        {userProfileMenuItems.map((item) => (
+          <ListItem key={item.text} disablePadding component={RouterLink} to={item.path} onClick={handleMenuItemClick}>
+            <ListItemButton selected={location.pathname.startsWith(item.path)}>
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </div>
+  );
+
+  // Determine current drawer open state based on screen size
+  const currentDrawerOpen = isMobile ? mobileOpen : desktopOpen;
+
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <StyledAppBar position="fixed" open={open}>
+      <StyledAppBar position="fixed" open={currentDrawerOpen} isMobile={isMobile}>
         <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
-            onClick={handleDrawerOpen}
+            onClick={handleDrawerToggle}
             edge="start"
-            sx={{ mr: 2, ...(open && { display: 'none' }) }}
+            sx={{ mr: 2, ...(currentDrawerOpen && !isMobile && { display: 'none' }) }} // Hide on desktop if drawer is open & persistent
           >
             <MenuIcon />
           </IconButton>
@@ -160,6 +207,13 @@ const MainLayout = () => {
         </Toolbar>
       </StyledAppBar>
       <Drawer
+        variant={isMobile ? "temporary" : "persistent"}
+        anchor="left"
+        open={currentDrawerOpen}
+        onClose={isMobile ? handleDrawerToggle : undefined} // Close on backdrop click for temporary drawer
+        ModalProps={{
+            keepMounted: true, // Better open performance on mobile.
+        }}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
@@ -168,46 +222,16 @@ const MainLayout = () => {
             boxSizing: 'border-box',
           },
         }}
-        variant="persistent"
-        anchor="left"
-        open={open}
       >
-        <DrawerHeader>
-          <Typography variant="h6" sx={{ mr: 'auto', ml: 1}}>Menu</Typography>
-          <IconButton onClick={handleDrawerClose}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </DrawerHeader>
-        <Divider />
-        <List>
-          {displayedMenuItems.map((item) => (
-            <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
-              <ListItemButton selected={location.pathname.startsWith(item.path)}>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          {userProfileMenuItems.map((item) => (
-            <ListItem key={item.text} disablePadding component={RouterLink} to={item.path}>
-              <ListItemButton selected={location.pathname.startsWith(item.path)}>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        {drawerContent}
       </Drawer>
-      <Main open={open}>
+      <Main open={currentDrawerOpen} isMobile={isMobile}>
         <DrawerHeader />
-        <ContentBox> {/* Content wrapper with padding */}
+        <ContentBox>
           <Outlet />
         </ContentBox>
         <Footer>
-            <Typography variant="body2"> {/* Removed color="text.secondary" to use contrastText */}
+            <Typography variant="body2">
                 Created By ITLabs Ghana <CopyrightIcon sx={{fontSize: 'inherit', verticalAlign: 'middle'}}/> 2025. Contact: 0248362847
             </Typography>
         </Footer>
