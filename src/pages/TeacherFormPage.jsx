@@ -239,7 +239,7 @@ const TeacherFormPage = () => {
             value={teacher[field.name] ? new Date(teacher[field.name]) : null}
             onChange={(date) => handleDateChange(field.name, date)}
             renderInput={(params) => (
-              <TextField {...params} fullWidth margin="normal" required={field.required} />
+              <TextField {...params} fullWidth margin="normal" required={field.required} variant="outlined" />
             )}
             inputFormat="yyyy-MM-dd" // Display format
             mask="____-__-__"
@@ -249,7 +249,7 @@ const TeacherFormPage = () => {
     }
     if (field.type === 'select') {
       return (
-        <FormControl fullWidth margin="normal" required={field.required}>
+        <FormControl fullWidth margin="normal" required={field.required} variant="outlined">
           <InputLabel>{field.label}</InputLabel>
           <Select
             name={field.name}
@@ -280,6 +280,7 @@ const TeacherFormPage = () => {
                 fullWidth
                 margin="normal"
                 required={field.required}
+                variant="outlined"
               />
             )}
           />
@@ -297,6 +298,7 @@ const TeacherFormPage = () => {
         type={field.type || 'text'}
         multiline={field.multiline}
         rows={field.rows}
+        variant="outlined"
         InputProps={{
             readOnly: field.readOnly,
           }}
