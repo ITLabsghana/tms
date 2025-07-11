@@ -5,14 +5,8 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const userRef = useRef(user); // Ref to hold the latest user state
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true); // Initial loading is true
-
-  // Update userRef whenever user state changes
-  useEffect(() => {
-    userRef.current = user;
-  }, [user]);
 
   // Fetches user profile. isMountedCheck is passed to ensure no state updates if unmounted.
   const fetchUserProfile = useCallback(async (activeUser, isMountedCheck) => {
@@ -30,8 +24,6 @@ export const AuthProvider = ({ children }) => {
       if (!isMountedCheck()) return null;
 
       if (profileError) {
-        // It's important not to log "Error fetching profile" if the error is PGRST116 (row not found),
-        // as this is expected for a new user whose profile might not be created yet by an admin/trigger.
         if (profileError.code !== 'PGRST116') {
             console.error("AuthContext: Error fetching profile:", profileError.message);
         }
@@ -48,13 +40,25 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Revalidates session and fetches profile.
+  // isVisibilityChange param helps to avoid unnecessary loading spinner on tab resume if user is unchanged.
   const revalidateSessionAndProfile = useCallback(async (isMountedCheck, isVisibilityChange = false) => {
-    let shouldSetLoading = !isVisibilityChange;
-    const currentUser = userRef.current; // Get current user from ref
+    // 'user' from AuthProvider scope when this fn was defined by useCallback.
+    // Since 'fetchUserProfile' is stable, this function instance is stable,
+    // so 'userSnapshotAtDefinition' refers to 'user' state at the time of initial mount.
+    const userSnapshotAtDefinition = user;
+
+    // If it's NOT a visibility change (e.g. initial load, sign-in), set loading true.
+    // If it IS a visibility change, delay setting loading until we confirm user identity changed.
+    if (!isVisibilityChange && isMountedCheck()) {
+      setLoading(true);
+    }
 
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (!isMountedCheck()) {
+      // If loading was set true (only if !isVisibilityChange), try to revert.
+      // Check isMounted again before calling setLoading.
+      if (!isVisibilityChange && isMountedCheck()) setLoading(false);
       return;
     }
 
@@ -63,69 +67,52 @@ export const AuthProvider = ({ children }) => {
       if (isMountedCheck()) {
         setUser(null);
         setProfile(null);
-        setLoading(false);
+        setLoading(false); // Clear loading on error, regardless of isVisibilityChange
       }
       return;
     }
 
     const activeUser = session?.user ?? null;
 
-    // Determine if loading indicator is needed
-    if (activeUser?.id !== currentUser?.id || !isVisibilityChange) {
-      shouldSetLoading = true;
-    }
-
-    if (shouldSetLoading && isMountedCheck()) {
+    // If it WAS a visibility change and we haven't set loading yet,
+    // check if user identity actually changed compared to the snapshot. If so, now set loading.
+    if (isVisibilityChange && activeUser?.id !== userSnapshotAtDefinition?.id && isMountedCheck()) {
       setLoading(true);
     }
 
-    // Update user state only if it has actually changed
-    if (activeUser?.id !== currentUser?.id || activeUser && !currentUser) {
-        setUser(activeUser);
-    } else if (!activeUser && currentUser) {
-        setUser(null);
-    }
-
-
-    if (activeUser) {
-      // Fetch profile only if user changed or profile is null (e.g. initial load for existing session)
-      // This condition might need refinement based on when profile should be re-fetched.
-      // For now, fetch if activeUser exists and is different or profile isn't there.
-      const currentProfile = profile; // Use profile from state directly for this check
-      if (activeUser.id !== currentUser?.id || !currentProfile || currentProfile.user_id !== activeUser.id) {
-        await fetchUserProfile(activeUser, isMountedCheck);
-      }
-    } else {
-      if (isMountedCheck()) setProfile(null);
-    }
+    setUser(activeUser);
+    await fetchUserProfile(activeUser, isMountedCheck); // Fetch profile for the active user (or null)
 
     if (isMountedCheck()) {
-      setLoading(false);
+      setLoading(false); // Ensure loading is cleared at the end
     }
-  }, [fetchUserProfile, profile]); // Depends on fetchUserProfile and profile (for profile refetch logic)
+  }, [fetchUserProfile]); // INTENTIONALLY NO 'user' dependency here. This keeps the function reference stable.
 
   useEffect(() => {
     let isMounted = true;
     const isMountedCheck = () => isMounted;
 
-    revalidateSessionAndProfile(isMountedCheck, false); // Initial check
+    // Initial check (isVisibilityChange = false by default)
+    revalidateSessionAndProfile(isMountedCheck);
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMountedCheck()) return;
 
         if (event === 'SIGNED_OUT') {
-          setUser(null); // userRef will be updated by its own useEffect
+          setUser(null);
           setProfile(null);
           setLoading(false);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
-          await revalidateSessionAndProfile(isMountedCheck, false);
+        } else if (event === 'SIGNED_IN' || event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+          // For these events, treat as significant change, use default isVisibilityChange = false
+          await revalidateSessionAndProfile(isMountedCheck);
         }
       }
     );
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && isMountedCheck()) {
+        // When tab becomes visible, pass true for isVisibilityChange
         await revalidateSessionAndProfile(isMountedCheck, true);
       }
     };
@@ -137,11 +124,11 @@ export const AuthProvider = ({ children }) => {
       authListener?.subscription.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [revalidateSessionAndProfile]); // revalidateSessionAndProfile should now be stable
+  }, [revalidateSessionAndProfile]); // Depends on revalidateSessionAndProfile (which is now stable)
 
   const value = {
-    signIn: async (data) => supabase.auth.signInWithPassword(data), // onAuthStateChange will handle updates
-    signOut: async () => supabase.auth.signOut(), // onAuthStateChange will handle updates
+    signIn: async (data) => supabase.auth.signInWithPassword(data),
+    signOut: async () => supabase.auth.signOut(),
     user,
     profile,
     loading,
