@@ -42,50 +42,68 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Revalidates session and fetches profile.
-  const revalidateSessionAndProfile = useCallback(async (isMountedCheck) => {
-    if (isMountedCheck()) setLoading(true);
+  const revalidateSessionAndProfile = useCallback(async (isMountedCheck, isVisibilityChange = false) => {
+    // Only set loading to true if it's not a visibility change or if absolutely necessary.
+    // For visibility changes, we want to avoid showing a loader unless session/user actually changes.
+    let shouldSetLoading = !isVisibilityChange;
 
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
     if (!isMountedCheck()) {
-        if (isMountedCheck()) setLoading(false); // Ensure loading is false if unmounted during getSession
-        return;
+      return; // Component unmounted, do nothing further.
     }
 
     if (sessionError) {
       console.error("AuthContext: Error revalidating session:", sessionError.message);
       setUser(null);
       setProfile(null);
-      if (isMountedCheck()) setLoading(false);
+      if (isMountedCheck()) setLoading(false); // Ensure loading is cleared on error
       return;
     }
 
     const activeUser = session?.user ?? null;
-    setUser(activeUser); // Set user state based on current session
-    await fetchUserProfile(activeUser, isMountedCheck); // Then fetch profile
+    const currentUser = user; // Get current user from state before potential update
 
-    if (isMountedCheck()) setLoading(false);
-  }, [fetchUserProfile]);
+    // If user state changes, or if it's an initial load (not just visibility change), then show loading.
+    if (activeUser?.id !== currentUser?.id || !isVisibilityChange) {
+      shouldSetLoading = true;
+    }
+
+    if (shouldSetLoading && isMountedCheck()) {
+      setLoading(true);
+    }
+
+    setUser(activeUser); // Set user state based on current session
+
+    if (activeUser) {
+      await fetchUserProfile(activeUser, isMountedCheck); // Then fetch profile
+    } else {
+      if (isMountedCheck()) setProfile(null); // Clear profile if no active user
+    }
+
+    if (isMountedCheck()) {
+      setLoading(false); // Always ensure loading is set to false at the end
+    }
+  }, [fetchUserProfile, user]); // Added user to dependencies
 
   useEffect(() => {
     let isMounted = true;
     const isMountedCheck = () => isMounted;
 
-    revalidateSessionAndProfile(isMountedCheck); // Initial check
+    // Initial check, not a visibility change
+    revalidateSessionAndProfile(isMountedCheck, false);
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMountedCheck()) return;
 
-        // console.log(`Auth event: ${event}`, session);
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
           setLoading(false);
-          // No need to call revalidateSessionAndProfile here,
-          // as the user is signed out and state is cleared.
         } else {
-          // For other events like SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED
-          await revalidateSessionAndProfile(isMountedCheck);
+          // For SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED, treat as significant change
+          await revalidateSessionAndProfile(isMountedCheck, false);
         }
       }
     );
@@ -93,8 +111,8 @@ export const AuthProvider = ({ children }) => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && isMountedCheck()) {
         // console.log("AuthContext: Tab became visible, revalidating session and profile.");
-        // When tab becomes visible, re-check everything.
-        await revalidateSessionAndProfile(isMountedCheck);
+        // When tab becomes visible, re-check session, pass true for isVisibilityChange
+        await revalidateSessionAndProfile(isMountedCheck, true);
       }
     };
 
