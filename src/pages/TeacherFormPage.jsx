@@ -28,6 +28,7 @@ const TeacherFormPage = () => {
     surname: '',
     other_names: '',
     date_of_birth: null,
+    age: '', // Added age to state
     gender: '',
     registered_no: '',
     ghana_card_no: '',
@@ -105,6 +106,33 @@ const TeacherFormPage = () => {
     setTeacher(prev => ({ ...prev, [name]: date }));
   };
 
+  // useEffect for age calculation
+  useEffect(() => {
+    if (teacher.date_of_birth) {
+      try {
+        const birthDate = new Date(teacher.date_of_birth);
+        if (isNaN(birthDate.getTime())) {
+          setTeacher(prev => ({ ...prev, age: '' })); // Invalid date
+          return;
+        }
+
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        setTeacher(prev => ({ ...prev, age: age >= 0 ? age.toString() : '' }));
+      } catch (error) {
+        console.error("Error calculating age:", error);
+        setTeacher(prev => ({ ...prev, age: '' })); // Reset age on error
+      }
+    } else {
+      setTeacher(prev => ({ ...prev, age: '' })); // Reset age if date_of_birth is cleared
+    }
+  }, [teacher.date_of_birth]);
+
   const handleSchoolChange = (name, newValue) => {
     setTeacher(prev => ({ ...prev, [name]: newValue ? newValue.school_id : null }));
   };
@@ -166,6 +194,7 @@ const TeacherFormPage = () => {
     { name: 'surname', label: 'Surname', required: true },
     { name: 'other_names', label: 'Other Names' },
     { name: 'date_of_birth', label: 'Date Of Birth', type: 'date' },
+    { name: 'age', label: 'Age', readOnly: true }, // Added Age field
     { name: 'gender', label: 'Gender', type: 'select', options: genderOptions },
     { name: 'registered_no', label: 'Registered No.' },
     { name: 'ghana_card_no', label: 'Ghana Card No.' },
@@ -268,6 +297,9 @@ const TeacherFormPage = () => {
         type={field.type || 'text'}
         multiline={field.multiline}
         rows={field.rows}
+        InputProps={{
+            readOnly: field.readOnly,
+          }}
       />
     );
   };
