@@ -77,10 +77,16 @@ export const AuthProvider = ({ children }) => {
         if (!isMountedCheck()) return;
 
         // console.log(`Auth event: ${event}`, session);
-        // For most events, a full revalidation is safest.
-        // SIGNED_OUT will result in session being null, activeUser null, profile null.
-        // SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED should all re-fetch user and profile.
-        await revalidateSessionAndProfile(isMountedCheck);
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          // No need to call revalidateSessionAndProfile here,
+          // as the user is signed out and state is cleared.
+        } else {
+          // For other events like SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED
+          await revalidateSessionAndProfile(isMountedCheck);
+        }
       }
     );
 
